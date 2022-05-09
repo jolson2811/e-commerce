@@ -6,7 +6,16 @@ const { Tag, Product, ProductTag } = require('../../models');
 router.get('/', (req, res) => {
   // find all tags
   // be sure to include its associated Product data
-  Tag.findAll()
+  Tag.findAll({
+    include: [
+      {
+        model: Product,
+        attributes: ['product_name'],
+        through: ProductTag,
+        as: 'tagged_products'
+     }
+  ]
+  })
   .then(dbCommentData => res.json(dbCommentData))
   .catch(err => {
       console.log(err);
@@ -15,9 +24,33 @@ router.get('/', (req, res) => {
 });
 
 router.get('/:id', (req, res) => {
-  // find a single tag by its `id`
-  // be sure to include its associated Product data
+  Tag.findOne({
+    attributes: { },
+    where: {
+        id: req.params.id
+    },
+    include: [
+      {
+        model: Product,
+        attributes: ['product_name'],
+        through: ProductTag,
+        as: 'tagged_products'
+     }
+  ]
+})
+    .then(dbUserData => {
+        if (!dbUserData) {
+            res.status(404).json({ message: 'No categories found with this id' });
+            return;
+        }
+        res.json(dbUserData);
+    })
+    .catch(err => {
+        console.log(err);
+        res.status(500).json(err);
+    });
 });
+
 
 router.post('/', (req, res) => {
   // create a new tag
